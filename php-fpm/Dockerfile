@@ -16,6 +16,16 @@ RUN apk update && \
         make \
         pkgconfig
 
+# 安装 Imagick 扩展
+RUN git clone ${GH_PROXY}https://github.com/Imagick/imagick /tmp/imagick && \
+    cd /tmp/imagick && \
+    phpize && \
+    ./configure && \
+    make && \
+    make install && \
+    echo 'extension=imagick.so' > /usr/local/etc/php/conf.d/imagick.ini && \
+    rm -rf /tmp/imagick
+
 # 下载并安装 PHP 扩展安装脚本
 RUN curl -sL ${GH_PROXY}https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o /usr/local/bin/install-php-extensions && \
     chmod +x /usr/local/bin/install-php-extensions
@@ -32,16 +42,6 @@ RUN /usr/local/bin/install-php-extensions \
         opcache \
         redis
 
-# 安装 Imagick 扩展
-RUN git clone ${GH_PROXY}https://github.com/Imagick/imagick /tmp/imagick && \
-    cd /tmp/imagick && \
-    phpize && \
-    ./configure && \
-    make && \
-    make install && \
-    echo 'extension=imagick.so' > /usr/local/etc/php/conf.d/imagick.ini && \
-    rm -rf /tmp/imagick
-
 # 设置 PHP 配置
 RUN echo "upload_max_filesize=50M" > /usr/local/etc/php/conf.d/uploads.ini && \
     echo "post_max_size=50M" > /usr/local/etc/php/conf.d/post.ini && \
@@ -50,11 +50,3 @@ RUN echo "upload_max_filesize=50M" > /usr/local/etc/php/conf.d/uploads.ini && \
     echo "max_input_time=600" > /usr/local/etc/php/conf.d/max_input_time.ini && \
     echo "max_input_vars=3000" > /usr/local/etc/php/conf.d/max_input_vars.ini
 
-# 设置工作目录（可选）
-WORKDIR /var/www/html
-
-# 暴露端口（可选）
-EXPOSE 9000
-
-# 启动 PHP FPM（通常不需要在 Dockerfile 中添加）
-CMD ["php-fpm"]
